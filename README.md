@@ -1,4 +1,6 @@
 # PagRX
+![GitHub Workflow Status](https://github.com/benahedron/pagrx/actions/workflows/tests.yml/badge.svg?branch=main)
+
 PagRX is a TypeScript library for accessing paged data with simple LRU caching support.
 
 It aims to reduce the complexities that emerge from mixed (linear & non-linear) access to slow / asynchronous paged data
