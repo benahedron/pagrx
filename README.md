@@ -56,8 +56,8 @@ pagrx.get(1).then((user: User) => {
 
 // Get a range of users
 pagrx.getRange(20, 30).then((users: User[]) => {
-  // 30 users starting at 20. Will automaticaly userCallback when requird.
-  // (See options PagRX constructo options for page & cache control.)    
+  // 30 users starting at 20. Will automatically call the userCallback when required.
+  // (See options PagRX constructor options for page & cache control.)    
 });
 ```
 
@@ -113,7 +113,7 @@ window.getRelativeRange(-2, 3).then((days: Day[]) => {
 
 ## Features 
 
-- [x] Customizable data retrival callback to support any data source.
+- [x] Customizable data retrieval callback to support any data source.
 - [x] Support to for paginated data.
 - [x] LRU caching of data pages.
 - [x] Simple sliding-window support.
