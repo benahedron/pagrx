@@ -1,4 +1,4 @@
-import {PageRxChunkData, PagRX, PagRXChunk, PagRxChunkLoadCallback, PagRxLoadCallback} from "../src";
+import {PagRxLoadCallback} from "../src";
 
 export class Fixture_user {
     constructor(public name: string, public index: number) {
@@ -32,8 +32,6 @@ export const delayedUserCallback: PagRxLoadCallback<Fixture_user> = (
         pageResolve(users);
     }, 10);
 }
-
-
 
 
 class Group {

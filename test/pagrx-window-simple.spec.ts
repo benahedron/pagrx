@@ -1,4 +1,4 @@
-import {PageRxChunkData, PagRX, PagRXChunk, PagRxChunkLoadCallback, PagRXSlidingWindow} from '../src/index';
+import {PagRX, PagRXSlidingWindow} from '../src/index';
 import {assert} from "chai";
 import * as sinon from "sinon";
 import {userCallback} from "./fixture_user";
@@ -12,6 +12,7 @@ class User {
         console.log(` - ${this.name} (${this.index})`);
     }
 }
+
 const pagrx = new PagRX<User>(userCallback);
 const chunkCallback = simple_window_callback<User>(pagrx);
 describe('PagRX Simple Window Tests', () => {

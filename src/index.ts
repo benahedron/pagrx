@@ -223,7 +223,7 @@ export class PagRX<Type> {
 
     getRange(startItemIndex: number, endItemIndex: number): Promise<Type[]> {
         const items = [];
-        if (endItemIndex < startItemIndex){
+        if (endItemIndex < startItemIndex) {
             throw new Error('The start item index must be smaller or equal to the end item index')
         }
         for (let itemIndex = startItemIndex; itemIndex < endItemIndex; ++itemIndex) {
@@ -291,6 +291,14 @@ export class PageRxChunkData<ChunkType> {
 }
 
 /**
+ * Direction of the chunk callback action.
+ */
+export enum PagRXChunkDirection {
+    Forward = 'forward',
+    Backward = 'backward'
+};
+
+/**
  * Simple utility to tie a chunk with its relative offset.
  */
 export class PagRXChunk<ChunkType> {
@@ -304,22 +312,23 @@ export class PagRXChunk<ChunkType> {
 }
 
 /**
- * The chunk callback type. The callback is always called with respect to a neighbour (or an index ).
+ * The chunk callback type. The callback is always called with respect to a neighbour (or an index to start at).
  *
- * The chunkResolve callback is used to inject the loaded chunk into the window.
- * Its top and bottom offset indices do refer to the indices of the data loaded
- * inside the chunk.
+ * The data is loaded in a certain direction relative to a neighbour. The returned promise
+ * must be resolved for the window data to become available. The chunk data next to the chunk type
+ * instance contains a top and a bottom index which are can also be used from the neighbour to determine where
+ * to start / end with the current chunk type instance.
  */
 export type PagRxChunkLoadCallback<ChunkType> = (
-    direction: 'backward' | 'forward' | number,
+    direction: PagRXChunkDirection | number,
     neighbour: PagRXChunk<ChunkType>
 ) => Promise<PageRxChunkData<ChunkType>>;
 
 /**
- * A sliding window, holding a range of data. It suports supports an __optional__ sub-type (ChunkType)
+ * A sliding window, holding a range of data. It supports an __optional__ sub-type (ChunkType)
  * that consumes data maybe at a different, non-linear pace.
  */
-export class PagRXSlidingWindow<Type, ChunkType=Type> {
+export class PagRXSlidingWindow<Type, ChunkType = Type> {
     private topItemOffset: number = 0;
     private rootChunk?: PagRXChunk<ChunkType>;
 
@@ -350,10 +359,10 @@ export class PagRXSlidingWindow<Type, ChunkType=Type> {
      * @param neighbour
      * @returns
      */
-    private load(direction: 'forward' | 'backward', neighbour: PagRXChunk<ChunkType>): PagRXChunk<ChunkType> {
+    private load(direction: PagRXChunkDirection, neighbour: PagRXChunk<ChunkType>): PagRXChunk<ChunkType> {
 
-        if ((direction == 'forward' && !neighbour.next) ||
-            (direction == 'backward' && !neighbour.previous)) {
+        if ((direction === PagRXChunkDirection.Forward && !neighbour.next) ||
+            (direction === PagRXChunkDirection.Backward && !neighbour.previous)) {
 
             const newChunk = new PagRXChunk<ChunkType>(new Promise<PageRxChunkData<ChunkType>>((resolve, reject) => {
                 this.loadCallback(direction, neighbour).then(
@@ -362,7 +371,7 @@ export class PagRXSlidingWindow<Type, ChunkType=Type> {
                     }
                 );
             }));
-            if (direction == 'forward') {
+            if (direction === PagRXChunkDirection.Forward) {
                 neighbour.next = newChunk;
                 newChunk.previous = neighbour;
             } else {
@@ -371,7 +380,7 @@ export class PagRXSlidingWindow<Type, ChunkType=Type> {
             }
 
             return newChunk;
-        } else if (direction == 'forward') {
+        } else if (direction === PagRXChunkDirection.Forward) {
             if (!neighbour.next) {
                 throw new PagRXError('Next is not set in window, while this was assumed!');
             }
@@ -389,14 +398,14 @@ export class PagRXSlidingWindow<Type, ChunkType=Type> {
             throw new PagRXError(`Invalid range: [${from}-${to}] given! To must be greater than from.`)
         }
         let start = this.root;
-        for (let i = 0; i != from; i += ((from < 0) ? -1 : 1)) {
-            const direction = (from < 0) ? 'backward' : 'forward'
+        for (let i = 0; i !== from; i += ((from < 0) ? -1 : 1)) {
+            const direction = (from < 0) ? PagRXChunkDirection.Backward : PagRXChunkDirection.Forward
             start = this.load(direction, start);
         }
-        let promises = [start];
+        const promises = [start];
         let current = start;
         for (let i = from; i < to; i++) {
-            current = this.load('forward', current);
+            current = this.load(PagRXChunkDirection.Forward, current);
             promises.push(current)
         }
 

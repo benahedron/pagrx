@@ -1,4 +1,11 @@
-import {PageRxChunkData, PagRX, PagRXChunk, PagRxChunkLoadCallback, PagRXSlidingWindow} from '../src/index';
+import {
+    PageRxChunkData,
+    PagRX,
+    PagRXChunk,
+    PagRXChunkDirection,
+    PagRxChunkLoadCallback,
+    PagRXSlidingWindow
+} from '../src/index';
 import {assert} from "chai";
 import * as sinon from "sinon";
 import {userCallback} from "./fixture_user";
@@ -24,19 +31,19 @@ class Group {
 
 const pagrx = new PagRX<User>(userCallback);
 const chunkCallback: PagRxChunkLoadCallback<Group> = (
-    direction: 'backward' | 'forward' | number,
+    direction: PagRXChunkDirection,
     neighbour: PagRXChunk<Group>
 ): Promise<PageRxChunkData<Group>> => {
     return new Promise<PageRxChunkData<Group>>((chunkResolve, chunkReject) => {
         let offset = 0;
-        if (direction !== 'forward' && direction !== 'backward') {
+        if (direction !== PagRXChunkDirection.Backward && direction !== PagRXChunkDirection.Forward) {
             offset = direction;
             pagrx.getRange(offset, offset + 10).then(users => {
                 chunkResolve(new PageRxChunkData<Group>(new Group(users, 0), offset, offset + 10));
             });
         } else {
             neighbour.data.then(chunkData => {
-                const dx = (direction === 'backward') ? -1 : 1;
+                const dx = (direction === PagRXChunkDirection.Backward) ? -1 : 1;
                 const dxp = dx * 10;
                 pagrx.getRange(chunkData.bottomOffset + dxp, chunkData.bottomOffset + dxp + 10).then(users => {
                     chunkResolve(new PageRxChunkData<Group>(

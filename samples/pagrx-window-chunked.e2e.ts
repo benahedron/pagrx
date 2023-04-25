@@ -1,5 +1,12 @@
-import {PageRxChunkData, PagRX, PagRXChunk, PagRxChunkLoadCallback, PagRXSlidingWindow} from '../src';
-import {calendarCallback, Event, Day} from "../test/fixture_calendar";
+import {
+    PageRxChunkData,
+    PagRX,
+    PagRXChunk,
+    PagRXChunkDirection,
+    PagRxChunkLoadCallback,
+    PagRXSlidingWindow
+} from '../src';
+import {calendarCallback, Day, Event} from "../test/fixture_calendar";
 
 
 const pagrx = new PagRX<Event>(calendarCallback);
@@ -50,24 +57,24 @@ function createChunkData(events: Event[], itemOffset: number, backward: boolean)
 }
 
 const chunkCallback: PagRxChunkLoadCallback<Day> = (
-    direction: 'backward' | 'forward' | number,
+    direction: PagRXChunkDirection | number,
     neighbour: PagRXChunk<Day>
 ): Promise<PageRxChunkData<Day>> => {
     return new Promise<PageRxChunkData<Day>>((chunkResolve, chunkReject) => {
 
-        if (direction !== 'forward' && direction !== 'backward') {  // Is the root. Start here.
+        if (Number.isInteger(direction)) {  // Is the root. Start here.
             const itemOffset = direction as number;
-            pagrx.getRange(itemOffset, FETCH_SIZE).then((events: Event[]) => {
+            pagrx.getRange(itemOffset, itemOffset + FETCH_SIZE).then((events: Event[]) => {
                 chunkResolve(createChunkData(events, itemOffset, false));
             });
         } else {
             neighbour.data.then((data: PageRxChunkData<Day>) => {
-                const backward = (direction == 'backward');
+                const backward = (direction === PagRXChunkDirection.Backward);
                 let itemOffset = !backward ? data.topOffset + 1 : data.bottomOffset - 1;
                 if (backward) {
                     itemOffset -= FETCH_SIZE;
                 }
-                pagrx.getRange(itemOffset, FETCH_SIZE).then((events: Event[]) => {
+                pagrx.getRange(itemOffset, itemOffset+FETCH_SIZE).then((events: Event[]) => {
 
                     chunkResolve(createChunkData(events, itemOffset, backward));
                 });
